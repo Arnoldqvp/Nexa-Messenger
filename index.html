@@ -1,0 +1,2769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NEXA Messenger</title>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+ --bg:#050609;
+ --glass:rgba(15,18,28,.75);
+ --line:rgba(255,255,255,.1);
+ --text:#f5f7ff;
+ --muted:#858da2;
+ --cyan:#00eaff;
+ --purple:#a855f7;
+ --blue:#5278ff;
+ --green:#25f5a5;
+ --red:#ff557d;
+}
+
+body{
+ min-height:100vh;
+ overflow:hidden;
+ color:var(--text);
+ font-family:Arial,Helvetica,sans-serif;
+ background:
+ radial-gradient(circle at 10% 10%,rgba(0,234,255,.13),transparent 28%),
+ radial-gradient(circle at 90% 20%,rgba(168,85,247,.13),transparent 28%),
+ radial-gradient(circle at 50% 100%,rgba(82,120,255,.12),transparent 35%),
+ #050609;
+}
+
+/* BACKGROUND */
+
+.bg{
+ position:fixed;
+ inset:0;
+ overflow:hidden;
+ pointer-events:none;
+}
+
+.grid{
+ position:absolute;
+ inset:-50%;
+ opacity:.13;
+ background-image:
+ linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),
+ linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);
+ background-size:45px 45px;
+ transform:perspective(500px) rotateX(60deg);
+ animation:grid 18s linear infinite;
+}
+
+@keyframes grid{
+ from{transform:perspective(500px) rotateX(60deg) translateY(0)}
+ to{transform:perspective(500px) rotateX(60deg) translateY(45px)}
+}
+
+.orb{
+ position:absolute;
+ border-radius:50%;
+ filter:blur(4px);
+ opacity:.22;
+ animation:orb 10s ease-in-out infinite;
+}
+
+.o1{
+ width:280px;
+ height:280px;
+ background:var(--cyan);
+ left:-100px;
+ top:5%;
+}
+
+.o2{
+ width:330px;
+ height:330px;
+ background:var(--purple);
+ right:-130px;
+ top:30%;
+ animation-delay:-3s;
+}
+
+.o3{
+ width:220px;
+ height:220px;
+ background:var(--blue);
+ left:40%;
+ bottom:-130px;
+ animation-delay:-6s;
+}
+
+@keyframes orb{
+ 50%{transform:translate(35px,-30px) scale(1.08)}
+}
+
+/* APP */
+
+.app{
+ position:relative;
+ z-index:2;
+ width:min(820px,92vw);
+ height:min(720px,91vh);
+ margin:2.5vh auto;
+ display:flex;
+ flex-direction:column;
+}
+
+/* TOP */
+
+.top{
+ height:60px;
+ flex-shrink:0;
+ padding:0 16px;
+ border:1px solid var(--line);
+ border-radius:19px;
+ background:rgba(8,11,17,.75);
+ backdrop-filter:blur(25px);
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ box-shadow:0 20px 60px rgba(0,0,0,.35);
+}
+
+.brand{
+ display:flex;
+ align-items:center;
+ gap:10px;
+}
+
+.logo{
+ width:36px;
+ height:36px;
+ display:grid;
+ place-items:center;
+ border-radius:11px;
+ color:var(--cyan);
+ font-weight:900;
+ background:rgba(0,234,255,.08);
+ border:1px solid rgba(0,234,255,.3);
+ box-shadow:0 0 25px rgba(0,234,255,.12);
+}
+
+.brand b{
+ font-size:15px;
+ letter-spacing:2px;
+}
+
+.brand small{
+ display:block;
+ color:var(--muted);
+ font-size:8px;
+ letter-spacing:1.5px;
+ margin-top:3px;
+}
+
+.status{
+ display:flex;
+ align-items:center;
+ gap:7px;
+ padding:7px 10px;
+ border:1px solid var(--line);
+ border-radius:12px;
+ background:rgba(255,255,255,.035);
+ color:var(--muted);
+ font-size:9px;
+ letter-spacing:1px;
+}
+
+.dot{
+ width:7px;
+ height:7px;
+ border-radius:50%;
+ background:#555;
+}
+
+.dot.online{
+ background:var(--green);
+ box-shadow:0 0 13px var(--green);
+}
+
+/* PAGE */
+
+.page{
+ flex:1;
+ min-height:0;
+ margin-top:12px;
+}
+
+/* HOME */
+
+.home{
+ height:100%;
+ display:grid;
+ grid-template-columns:1.15fr .85fr;
+ gap:12px;
+}
+
+.hero,
+.card,
+.waiting,
+.chat{
+ border:1px solid var(--line);
+ background:var(--glass);
+ backdrop-filter:blur(25px);
+ box-shadow:0 25px 80px rgba(0,0,0,.3);
+}
+
+.hero{
+ border-radius:22px;
+ padding:30px;
+ display:flex;
+ flex-direction:column;
+ justify-content:center;
+ position:relative;
+ overflow:hidden;
+}
+
+.hero:after{
+ content:"";
+ position:absolute;
+ width:280px;
+ height:280px;
+ right:-120px;
+ top:-120px;
+ background:var(--cyan);
+ opacity:.12;
+ filter:blur(60px);
+ border-radius:50%;
+}
+
+.tag{
+ color:var(--cyan);
+ font-size:9px;
+ letter-spacing:3px;
+ margin-bottom:14px;
+}
+
+.hero h1{
+ font-size:clamp(36px,5vw,56px);
+ line-height:.9;
+ letter-spacing:-3px;
+ margin-bottom:17px;
+}
+
+.hero h1 span{
+ color:transparent;
+ background:linear-gradient(90deg,var(--cyan),#8a9cff,var(--purple));
+ -webkit-background-clip:text;
+ background-clip:text;
+}
+
+.hero p{
+ max-width:460px;
+ color:var(--muted);
+ font-size:12px;
+ line-height:1.55;
+}
+
+.features{
+ display:flex;
+ gap:7px;
+ flex-wrap:wrap;
+ margin-top:20px;
+}
+
+.feature{
+ padding:7px 9px;
+ border:1px solid var(--line);
+ background:rgba(255,255,255,.035);
+ border-radius:10px;
+ color:#aeb5c6;
+ font-size:8px;
+}
+
+.actions{
+ display:flex;
+ flex-direction:column;
+ gap:12px;
+}
+
+.card{
+ flex:1;
+ border-radius:22px;
+ padding:20px;
+ display:flex;
+ flex-direction:column;
+ justify-content:center;
+ position:relative;
+ overflow:hidden;
+}
+
+.card h2{
+ font-size:17px;
+ margin-bottom:7px;
+}
+
+.card p{
+ color:var(--muted);
+ font-size:10px;
+ line-height:1.6;
+ margin-bottom:14px;
+}
+
+.icon{
+ width:44px;
+ height:44px;
+ display:grid;
+ place-items:center;
+ border-radius:13px;
+ font-size:19px;
+ color:var(--cyan);
+ background:rgba(0,234,255,.07);
+ border:1px solid rgba(0,234,255,.2);
+ margin-bottom:13px;
+}
+
+.join .icon{
+ color:var(--purple);
+ border-color:rgba(168,85,247,.25);
+ background:rgba(168,85,247,.07);
+}
+
+.input{
+ height:43px;
+ width:100%;
+ border-radius:12px;
+ border:1px solid var(--line);
+ background:rgba(0,0,0,.25);
+ color:#fff;
+ outline:none;
+ text-align:center;
+ letter-spacing:5px;
+ font-size:14px;
+ margin-bottom:8px;
+}
+
+.input:focus{
+ border-color:rgba(0,234,255,.5);
+}
+
+.btn{
+ width:100%;
+ height:43px;
+ border-radius:12px;
+ border:1px solid rgba(0,234,255,.28);
+ background:rgba(0,234,255,.09);
+ color:#fff;
+ cursor:pointer;
+ font-weight:bold;
+ font-size:10px;
+ letter-spacing:1px;
+ transition:.2s;
+}
+
+.btn:hover{
+ transform:translateY(-2px);
+ box-shadow:0 8px 30px rgba(0,234,255,.12);
+ border-color:rgba(0,234,255,.6);
+}
+
+.purple{
+ border-color:rgba(168,85,247,.3);
+ background:rgba(168,85,247,.1);
+}
+
+/* WAITING */
+
+.waiting{
+ height:100%;
+ border-radius:22px;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ padding:30px;
+ text-align:center;
+}
+
+.waitBox{
+ width:min(600px,100%);
+}
+
+.waitBox small{
+ color:var(--cyan);
+ font-size:9px;
+ letter-spacing:3px;
+}
+
+.code{
+ font-size:clamp(40px,8vw,65px);
+ letter-spacing:7px;
+ font-weight:900;
+ margin:15px 0;
+ text-shadow:0 0 35px rgba(0,234,255,.25);
+}
+
+.copy{
+ padding:9px 16px;
+ border-radius:11px;
+ border:1px solid var(--line);
+ background:rgba(255,255,255,.04);
+ color:#bfc5d4;
+ cursor:pointer;
+ font-size:10px;
+}
+
+.waitText{
+ color:var(--muted);
+ font-size:10px;
+ margin:15px 0;
+}
+
+.loader{
+ height:4px;
+ overflow:hidden;
+ border-radius:5px;
+ background:rgba(255,255,255,.06);
+ margin-bottom:22px;
+}
+
+.loader div{
+ width:35%;
+ height:100%;
+ background:linear-gradient(90deg,var(--cyan),var(--purple));
+ animation:load 1.5s infinite;
+}
+
+@keyframes load{
+ from{transform:translateX(-150%)}
+ to{transform:translateX(350%)}
+}
+
+/* CHAT */
+
+.chat{
+ height:100%;
+ border-radius:22px;
+ overflow:hidden;
+ display:flex;
+ flex-direction:column;
+}
+
+.chatTop{
+ height:60px;
+ flex-shrink:0;
+ padding:0 13px;
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ border-bottom:1px solid var(--line);
+}
+
+.person{
+ display:flex;
+ align-items:center;
+ gap:10px;
+}
+
+.avatar{
+ width:36px;
+ height:36px;
+ display:grid;
+ place-items:center;
+ border-radius:11px;
+ color:var(--cyan);
+ background:rgba(0,234,255,.08);
+ border:1px solid rgba(0,234,255,.2);
+}
+
+.person strong{
+ font-size:11px;
+}
+
+.person small{
+ display:block;
+ color:var(--muted);
+ font-size:8px;
+ margin-top:3px;
+}
+
+.tools{
+ display:flex;
+ gap:6px;
+}
+
+.tool{
+ width:34px;
+ height:34px;
+ border-radius:10px;
+ border:1px solid var(--line);
+ background:rgba(255,255,255,.035);
+ color:#adb5c6;
+ cursor:pointer;
+}
+
+.messages{
+ flex:1;
+ min-height:0;
+ overflow-y:auto;
+ padding:16px;
+ display:flex;
+ flex-direction:column;
+ gap:8px;
+}
+
+.messages::-webkit-scrollbar{
+ width:5px;
+}
+
+.messages::-webkit-scrollbar-thumb{
+ background:rgba(255,255,255,.12);
+ border-radius:10px;
+}
+
+.empty{
+ margin:auto;
+ text-align:center;
+ color:#5f677a;
+}
+
+.emptyIcon{
+ width:62px;
+ height:62px;
+ display:grid;
+ place-items:center;
+ border-radius:20px;
+ border:1px solid var(--line);
+ margin:0 auto 14px;
+ font-size:24px;
+}
+
+.empty p{
+ font-size:11px;
+}
+
+.row{
+ display:flex;
+}
+
+.row.me{
+ justify-content:flex-end;
+}
+
+.bubble{
+ max-width:min(70%,550px);
+ padding:9px 12px;
+ border-radius:15px;
+ border:1px solid rgba(255,255,255,.08);
+ background:rgba(255,255,255,.05);
+ font-size:11px;
+ line-height:1.5;
+ word-break:break-word;
+}
+
+.me .bubble{
+ background:linear-gradient(
+  135deg,
+  rgba(0,234,255,.14),
+  rgba(82,120,255,.12)
+ );
+ border-color:rgba(0,234,255,.18);
+ border-bottom-right-radius:5px;
+}
+
+.row:not(.me) .bubble{
+ border-bottom-left-radius:5px;
+}
+
+/* TRANSFER */
+
+.transfer{
+ width:min(380px,78vw);
+ padding:10px;
+ border-radius:15px;
+ border:1px solid rgba(0,234,255,.15);
+ background:rgba(0,0,0,.25);
+}
+
+.transferHead{
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ gap:10px;
+ margin-bottom:8px;
+}
+
+.fileName{
+ overflow:hidden;
+ white-space:nowrap;
+ text-overflow:ellipsis;
+ font-size:10px;
+}
+
+.percent{
+ color:var(--cyan);
+ font-size:10px;
+ font-weight:bold;
+}
+
+.progress{
+ height:6px;
+ background:rgba(255,255,255,.07);
+ border-radius:10px;
+ overflow:hidden;
+}
+
+.bar{
+ height:100%;
+ width:0%;
+ background:linear-gradient(
+  90deg,
+  var(--cyan),
+  var(--blue),
+  var(--purple)
+ );
+ box-shadow:0 0 14px rgba(0,234,255,.35);
+ transition:width .06s linear;
+}
+
+.transferFoot{
+ display:flex;
+ justify-content:space-between;
+ color:#70788a;
+ font-size:8px;
+ margin-top:6px;
+}
+
+/* FILE */
+
+.file{
+ width:min(380px,78vw);
+ border-radius:15px;
+ overflow:hidden;
+ border:1px solid rgba(255,255,255,.1);
+ background:rgba(255,255,255,.045);
+}
+
+.preview{
+ width:100%;
+ max-height:220px;
+ display:block;
+ object-fit:cover;
+}
+
+.fileInfo{
+ display:flex;
+ align-items:center;
+ gap:9px;
+ padding:9px;
+}
+
+.fileIcon{
+ width:33px;
+ height:33px;
+ flex-shrink:0;
+ display:grid;
+ place-items:center;
+ border-radius:10px;
+ background:rgba(0,234,255,.08);
+ color:var(--cyan);
+}
+
+.fileMeta{
+ flex:1;
+ min-width:0;
+}
+
+.fileTitle{
+ font-size:10px;
+ overflow:hidden;
+ white-space:nowrap;
+ text-overflow:ellipsis;
+}
+
+.fileSize{
+ color:var(--muted);
+ font-size:8px;
+ margin-top:3px;
+}
+
+.download{
+ width:31px;
+ height:31px;
+ border-radius:9px;
+ border:1px solid var(--line);
+ background:rgba(255,255,255,.04);
+ color:#fff;
+ cursor:pointer;
+}
+
+/* COMPOSER */
+
+.composer{
+ flex-shrink:0;
+ padding:10px;
+ border-top:1px solid var(--line);
+ background:rgba(5,7,11,.45);
+}
+
+.compose{
+ display:flex;
+ align-items:center;
+ gap:6px;
+ padding:4px;
+ border:1px solid var(--line);
+ border-radius:14px;
+ background:rgba(255,255,255,.035);
+}
+
+.attach,
+.send{
+ height:36px;
+ border-radius:10px;
+ cursor:pointer;
+}
+
+.attach{
+ width:36px;
+ border:1px solid var(--line);
+ background:rgba(255,255,255,.04);
+ color:#aeb5c6;
+ font-size:17px;
+}
+
+.send{
+ width:65px;
+ border:1px solid rgba(0,234,255,.25);
+ background:rgba(0,234,255,.1);
+ color:var(--cyan);
+ font-size:10px;
+ font-weight:bold;
+}
+
+.message{
+ flex:1;
+ min-width:0;
+ height:36px;
+ border:0;
+ outline:0;
+ background:transparent;
+ color:#fff;
+ padding:0 8px;
+ font-size:11px;
+}
+
+.message::placeholder{
+ color:#5e6575;
+}
+
+.footer{
+ display:flex;
+ justify-content:space-between;
+ padding:6px 4px 0;
+ color:#565e70;
+ font-size:8px;
+}
+
+.reconnect{
+ display:none;
+ color:var(--red);
+ cursor:pointer;
+}
+
+/* MOBILE */
+
+@media(max-width:760px){
+
+ body{
+  overflow:auto;
+ }
+
+ .app{
+  width:94vw;
+  height:auto;
+  min-height:94vh;
+  margin:3vh auto;
+ }
+
+ .home{
+  grid-template-columns:1fr;
+ }
+
+ .hero{
+  min-height:330px;
+ }
+
+ .actions{
+  min-height:390px;
+ }
+
+ .chat{
+  height:calc(94vh - 74px);
+ }
+
+}
+
+@media(max-width:430px){
+
+ .brand small{
+  display:none;
+ }
+
+ .hero{
+  padding:27px;
+ }
+
+ .messages{
+  padding:14px;
+ }
+
+ .send{
+  width:55px;
+ }
+
+ .send span{
+  display:none;
+ }
+
+}
+</style>
+</head>
+
+<body>
+
+<div class="bg">
+ <div class="grid"></div>
+ <div class="orb o1"></div>
+ <div class="orb o2"></div>
+ <div class="orb o3"></div>
+</div>
+
+<div class="app">
+
+<header class="top">
+
+ <div class="brand">
+
+  <div class="logo">N</div>
+
+  <div>
+   <b>NEXA</b>
+   <small>PRIVATE P2P MESSENGER</small>
+  </div>
+
+ </div>
+
+ <div class="status">
+  <i class="dot" id="dot"></i>
+  <span id="status">OFFLINE</span>
+ </div>
+
+</header>
+
+<main class="page">
+
+<!-- HOME -->
+
+<section class="home" id="home">
+
+ <div class="hero">
+
+  <div class="tag">SECURE • DIRECT • FAST</div>
+
+  <h1>
+   Talk.<br>
+   Share.<br>
+   <span>Connect.</span>
+  </h1>
+
+  <p>
+   Send messages, photos and large files directly
+   between browsers. No account required.
+  </p>
+
+  <div class="features">
+   <div class="feature">⚡ REAL-TIME</div>
+   <div class="feature">🔗 P2P</div>
+   <div class="feature">📁 UP TO 200 MB</div>
+   <div class="feature">🖼 PHOTOS</div>
+  </div>
+
+ </div>
+
+ <div class="actions">
+
+  <div class="card">
+
+   <div class="icon">＋</div>
+
+   <h2>Create Room</h2>
+
+   <p>
+    Create a private room and send the code
+    to another person.
+   </p>
+
+   <button
+    class="btn"
+    onclick="createRoom()">
+    CREATE ROOM
+   </button>
+
+  </div>
+
+  <div class="card join">
+
+   <div class="icon">↗</div>
+
+   <h2>Join Room</h2>
+
+   <p>
+    Enter the six-character room code.
+   </p>
+
+   <input
+    id="roomInput"
+    class="input"
+    maxlength="6"
+    placeholder="XXXXXX"
+    autocomplete="off">
+
+   <button
+    class="btn purple"
+    onclick="joinRoom()">
+    JOIN ROOM
+   </button>
+
+  </div>
+
+ </div>
+
+</section>
+
+
+<!-- WAITING -->
+
+<section
+ class="waiting"
+ id="waiting"
+ style="display:none">
+
+ <div class="waitBox">
+
+  <small>ROOM READY</small>
+
+  <div
+   class="code"
+   id="code">
+   ------
+  </div>
+
+  <button
+   class="copy"
+   onclick="copyCode()">
+   COPY CODE
+  </button>
+
+  <div class="waitText">
+   Waiting for the other person to connect...
+  </div>
+
+  <div class="loader">
+   <div></div>
+  </div>
+
+  <button
+   class="btn"
+   onclick="goHome()">
+   BACK
+  </button>
+
+ </div>
+
+</section>
+
+
+<!-- CHAT -->
+
+<section
+ class="chat"
+ id="chat"
+ style="display:none">
+
+ <div class="chatTop">
+
+  <div class="person">
+
+   <div class="avatar">✦</div>
+
+   <div>
+    <strong>Private Chat</strong>
+    <small id="roomLabel">ROOM ------</small>
+   </div>
+
+  </div>
+
+  <div class="tools">
+
+   <button
+    class="tool"
+    onclick="copyCode()"
+    title="Copy room code">
+    ⧉
+   </button>
+
+   <button
+    class="tool"
+    onclick="reconnect()"
+    title="Reconnect">
+    ↻
+   </button>
+
+   <button
+    class="tool"
+    onclick="goHome()"
+    title="Leave">
+    ×
+   </button>
+
+  </div>
+
+ </div>
+
+
+ <div
+  class="messages"
+  id="messages">
+
+  <div
+   class="empty"
+   id="empty">
+
+   <div class="emptyIcon">✦</div>
+
+   <p>
+    Your private conversation starts here.
+   </p>
+
+  </div>
+
+ </div>
+
+
+ <div class="composer">
+
+  <div class="compose">
+
+   <button
+    class="attach"
+    onclick="pickFile()"
+    title="Send files">
+    ⌕
+   </button>
+
+   <input
+    id="message"
+    class="message"
+    placeholder="Write a message..."
+    autocomplete="off">
+
+   <button
+    class="send"
+    onclick="sendMessage()">
+
+    <span>SEND</span> ➤
+
+   </button>
+
+  </div>
+
+  <div class="footer">
+
+   <span id="transferStatus">
+    READY
+   </span>
+
+   <span
+    class="reconnect"
+    id="reconnect"
+    onclick="reconnect()">
+    RECONNECT
+   </span>
+
+  </div>
+
+ </div>
+
+</section>
+
+</main>
+
+</div>
+
+
+<input
+ type="file"
+ id="fileInput"
+ hidden
+ multiple>
+
+
+<script>
+
+/* =====================================================
+   SETTINGS
+===================================================== */
+
+const MAX_FILE_SIZE =
+ 200 * 1024 * 1024;
+
+const CHUNK_SIZE =
+ 32 * 1024;
+
+const ACK_EVERY = 8;
+
+const peerConfig = {
+
+ debug:0,
+
+ config:{
+  iceServers:[
+   {
+    urls:[
+     "stun:stun.l.google.com:19302",
+     "stun:stun1.l.google.com:19302"
+    ]
+   }
+  ]
+ }
+
+};
+
+const PREFIX="nexa-modern-";
+
+
+/* =====================================================
+   STATE
+===================================================== */
+
+let peer=null;
+let connection=null;
+let isHost=false;
+let roomCode="";
+
+let fileQueue=[];
+let sending=false;
+let incoming=null;
+
+let ackResolver=null;
+
+
+/* =====================================================
+   ELEMENTS
+===================================================== */
+
+const home=
+ document.getElementById("home");
+
+const waiting=
+ document.getElementById("waiting");
+
+const chat=
+ document.getElementById("chat");
+
+const roomInput=
+ document.getElementById("roomInput");
+
+const codeEl=
+ document.getElementById("code");
+
+const roomLabel=
+ document.getElementById("roomLabel");
+
+const messages=
+ document.getElementById("messages");
+
+const message=
+ document.getElementById("message");
+
+const fileInput=
+ document.getElementById("fileInput");
+
+const dot=
+ document.getElementById("dot");
+
+const status=
+ document.getElementById("status");
+
+const transferStatus=
+ document.getElementById("transferStatus");
+
+const reconnectBtn=
+ document.getElementById("reconnect");
+
+
+/* =====================================================
+   PAGE
+===================================================== */
+
+function page(name){
+
+ home.style.display="none";
+ waiting.style.display="none";
+ chat.style.display="none";
+
+ if(name==="home")
+  home.style.display="grid";
+
+ if(name==="waiting")
+  waiting.style.display="flex";
+
+ if(name==="chat")
+  chat.style.display="flex";
+}
+
+
+/* =====================================================
+   ROOM CODE
+===================================================== */
+
+function generateCode(){
+
+ const chars=
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+ let out="";
+
+ for(let i=0;i<6;i++){
+
+  out+=chars[
+   Math.floor(
+    Math.random()*chars.length
+   )
+  ];
+
+ }
+
+ return out;
+}
+
+
+/* =====================================================
+   STATUS
+===================================================== */
+
+function online(){
+
+ dot.classList.add("online");
+
+ status.textContent="ONLINE";
+
+ reconnectBtn.style.display="none";
+}
+
+
+function offline(){
+
+ dot.classList.remove("online");
+
+ status.textContent="OFFLINE";
+
+ reconnectBtn.style.display="block";
+}
+
+
+/* =====================================================
+   CREATE ROOM
+===================================================== */
+
+function createRoom(){
+
+ destroyPeer();
+
+ isHost=true;
+
+ roomCode=
+  generateCode();
+
+ codeEl.textContent=
+  roomCode;
+
+ page("waiting");
+
+ createHost();
+}
+
+
+function createHost(){
+
+ const current=
+  roomCode;
+
+ peer=
+  new Peer(
+   PREFIX+current,
+   peerConfig
+  );
+
+
+ peer.on("open",()=>{
+
+  console.log(
+   "Host ready:",
+   current
+  );
+
+ });
+
+
+ peer.on("connection",conn=>{
+
+  if(connection){
+
+   try{
+    conn.close();
+   }catch(e){}
+
+   return;
+  }
+
+  connection=conn;
+
+  setupConnection();
+
+ });
+
+
+ peer.on("error",err=>{
+
+  console.log(err);
+
+  if(
+   err.type==="unavailable-id"
+  ){
+
+   destroyPeer();
+
+   roomCode=
+    generateCode();
+
+   codeEl.textContent=
+    roomCode;
+
+   setTimeout(
+    createHost,
+    300
+   );
+  }
+
+ });
+}
+
+
+/* =====================================================
+   JOIN ROOM
+===================================================== */
+
+function joinRoom(){
+
+ const value=
+  roomInput.value
+   .trim()
+   .toUpperCase();
+
+
+ if(
+  !/^[A-Z0-9]{6}$/.test(value)
+ ){
+
+  roomInput.style.borderColor=
+   "#ff557d";
+
+  setTimeout(()=>{
+
+   roomInput.style.borderColor="";
+
+  },700);
+
+  return;
+ }
+
+
+ destroyPeer();
+
+ isHost=false;
+
+ roomCode=value;
+
+ codeEl.textContent=
+  roomCode;
+
+ page("waiting");
+
+ createGuest();
+}
+
+
+function createGuest(){
+
+ peer=
+  new Peer(
+   peerConfig
+  );
+
+
+ peer.on("open",()=>{
+
+  connection=
+   peer.connect(
+    PREFIX+roomCode,
+    {
+     reliable:true
+    }
+   );
+
+  setupConnection();
+
+ });
+
+
+ peer.on("error",err=>{
+
+  console.log(err);
+
+  if(
+   err.type==="peer-unavailable"
+  ){
+
+   alert(
+    "Room not found or host is offline."
+   );
+
+   goHome();
+  }
+
+ });
+}
+
+
+/* =====================================================
+   CONNECTION
+===================================================== */
+
+function setupConnection(){
+
+ if(!connection)
+  return;
+
+
+ connection.on("open",()=>{
+
+  /*
+   BOTH users enter chat here.
+  */
+
+  page("chat");
+
+  roomLabel.textContent=
+   "ROOM "+roomCode;
+
+  online();
+
+  transferStatus.textContent=
+   "CONNECTED";
+
+  message.focus();
+
+ });
+
+
+ connection.on(
+  "data",
+  async data=>{
+
+   await receiveData(data);
+
+  }
+ );
+
+
+ connection.on("close",()=>{
+
+  connection=null;
+
+  offline();
+
+  transferStatus.textContent=
+   "DISCONNECTED";
+
+ });
+
+
+ connection.on("error",err=>{
+
+  console.log(err);
+
+  offline();
+
+ });
+
+}
+
+
+/* =====================================================
+   TEXT CHAT
+===================================================== */
+
+function sendMessage(){
+
+ if(
+  !connection ||
+  !connection.open
+ ){
+
+  transferStatus.textContent=
+   "OFFLINE";
+
+  return;
+ }
+
+
+ const text=
+  message.value.trim();
+
+ if(!text)
+  return;
+
+
+ const clean=
+  text.slice(0,4000);
+
+
+ connection.send({
+
+  type:"chat",
+
+  message:clean
+
+ });
+
+
+ addText(
+  "me",
+  clean
+ );
+
+
+ message.value="";
+
+ message.focus();
+}
+
+
+message.addEventListener(
+ "keydown",
+ e=>{
+
+  if(
+   e.key==="Enter" &&
+   !e.shiftKey
+  ){
+
+   e.preventDefault();
+
+   sendMessage();
+  }
+
+ }
+);
+
+
+function addText(
+ side,
+ text
+){
+
+ removeEmpty();
+
+ const row=
+  document.createElement("div");
+
+ row.className=
+  "row "+
+  (side==="me"?"me":"");
+
+
+ const bubble=
+  document.createElement("div");
+
+ bubble.className=
+  "bubble";
+
+ bubble.textContent=
+  text;
+
+ row.appendChild(
+  bubble
+ );
+
+ messages.appendChild(
+  row
+ );
+
+ scroll();
+}
+
+
+/* =====================================================
+   FILE PICKER
+===================================================== */
+
+function pickFile(){
+
+ fileInput.click();
+}
+
+
+fileInput.addEventListener(
+ "change",
+ ()=>{
+
+  const files=
+   Array.from(
+    fileInput.files||[]
+   );
+
+  /*
+   Allows selecting same file again.
+  */
+
+  fileInput.value="";
+
+
+  for(
+   const file of files
+  ){
+
+   if(
+    file.size>
+    MAX_FILE_SIZE
+   ){
+
+    alert(
+     file.name+
+     "\n\nMaximum file size is 200 MB."
+    );
+
+    continue;
+   }
+
+   fileQueue.push(
+    file
+   );
+  }
+
+
+  processQueue();
+
+ }
+);
+
+
+/* =====================================================
+   FILE QUEUE
+===================================================== */
+
+async function processQueue(){
+
+ if(sending)
+  return;
+
+ if(!fileQueue.length)
+  return;
+
+ if(
+  !connection ||
+  !connection.open
+ ){
+
+  transferStatus.textContent=
+   "OFFLINE";
+
+  return;
+ }
+
+
+ sending=true;
+
+ const file=
+  fileQueue.shift();
+
+
+ try{
+
+  await sendFile(
+   file
+  );
+
+ }catch(err){
+
+  console.error(err);
+
+  transferStatus.textContent=
+   "SEND ERROR";
+
+ }
+
+
+ sending=false;
+
+
+ if(fileQueue.length){
+
+  setTimeout(
+   processQueue,
+   100
+  );
+
+ }else{
+
+  transferStatus.textContent=
+   "READY";
+ }
+}
+
+
+/* =====================================================
+   SEND FILE
+===================================================== */
+
+async function sendFile(file){
+
+ const ui=
+  createTransfer(
+   file,
+   true
+  );
+
+
+ transferStatus.textContent=
+  "UPLOADING";
+
+
+ const fileId=
+  (
+   window.crypto &&
+   crypto.randomUUID
+  )
+  ? crypto.randomUUID()
+  : Date.now()+"-"+Math.random();
+
+
+ connection.send({
+
+  type:"file-start",
+
+  name:file.name,
+
+  size:file.size,
+
+  mime:
+   file.type ||
+   "application/octet-stream",
+
+  id:fileId
+
+ });
+
+
+ let offset=0;
+
+ let chunkNumber=0;
+
+
+ while(
+  offset<file.size
+ ){
+
+  if(
+   !connection ||
+   !connection.open
+  ){
+
+   throw new Error(
+    "Connection lost"
+   );
+  }
+
+
+  const end=
+   Math.min(
+    offset+CHUNK_SIZE,
+    file.size
+   );
+
+
+  const buffer=
+   await file
+    .slice(
+     offset,
+     end
+    )
+    .arrayBuffer();
+
+
+  const needAck=
+   (
+    (chunkNumber+1)
+    %ACK_EVERY===0
+   )
+   ||
+   end>=file.size;
+
+
+  const ackPromise=
+   needAck
+   ? waitForAck()
+   : null;
+
+
+  connection.send({
+
+   type:"file-chunk",
+
+   index:chunkNumber,
+
+   data:buffer,
+
+   ack:needAck
+
+  });
+
+
+  offset=end;
+
+  chunkNumber++;
+
+
+  ui.current=
+   offset;
+
+  updateTransfer(
+   ui
+  );
+
+
+  if(ackPromise)
+   await ackPromise;
+
+
+  /*
+   Give browser time between chunks.
+  */
+
+  await new Promise(
+   resolve=>
+    setTimeout(
+     resolve,
+     0
+    )
+  );
+
+ }
+
+
+ connection.send({
+  type:"file-end"
+ });
+
+
+ const url=
+  URL.createObjectURL(
+   file
+  );
+
+
+ finishFile(
+  ui,
+  url
+ );
+}
+
+
+/* =====================================================
+   ACK
+===================================================== */
+
+function waitForAck(){
+
+ return new Promise(
+  resolve=>{
+
+   ackResolver=
+    resolve;
+
+  }
+ );
+}
+
+
+function sendAck(){
+
+ if(
+  connection &&
+  connection.open
+ ){
+
+  connection.send({
+   type:"file-ack"
+  });
+
+ }
+}
+
+
+/* =====================================================
+   RECEIVE
+===================================================== */
+
+async function receiveData(data){
+
+ if(
+  !data ||
+  !data.type
+ )
+  return;
+
+
+ /* CHAT */
+
+ if(
+  data.type==="chat"
+ ){
+
+  addText(
+   "them",
+   String(
+    data.message||""
+   )
+  );
+
+  return;
+ }
+
+
+ /* ACK */
+
+ if(
+  data.type==="file-ack"
+ ){
+
+  if(ackResolver){
+
+   const resolve=
+    ackResolver;
+
+   ackResolver=null;
+
+   resolve();
+  }
+
+  return;
+ }
+
+
+ /* FILE START */
+
+ if(
+  data.type==="file-start"
+ ){
+
+  incoming={
+
+   id:data.id,
+
+   name:
+    data.name ||
+    "file",
+
+   size:
+    Number(data.size)||0,
+
+   mime:
+    data.mime ||
+    "application/octet-stream",
+
+   received:0,
+
+   chunks:[],
+
+   ui:null
+
+  };
+
+
+  if(
+   incoming.size>
+   MAX_FILE_SIZE
+  ){
+
+   incoming=null;
+
+   alert(
+    "Incoming file is larger than 200 MB."
+   );
+
+   return;
+  }
+
+
+  incoming.ui=
+   createTransfer(
+    incoming,
+    false
+   );
+
+
+  transferStatus.textContent=
+   "DOWNLOADING";
+
+  return;
+ }
+
+
+ /* FILE CHUNK */
+
+ if(
+  data.type==="file-chunk"
+ ){
+
+  if(!incoming)
+   return;
+
+
+  let buffer=
+   data.data;
+
+
+  if(
+   buffer instanceof Blob
+  ){
+
+   buffer=
+    await buffer.arrayBuffer();
+
+  }else if(
+   buffer instanceof Uint8Array
+  ){
+
+   buffer=
+    buffer.buffer;
+  }
+
+
+  incoming.chunks.push(
+   buffer
+  );
+
+  incoming.received+=
+   buffer.byteLength;
+
+
+  incoming.ui.current=
+   incoming.received;
+
+
+  updateTransfer(
+   incoming.ui
+  );
+
+
+  if(data.ack)
+   sendAck();
+
+
+  return;
+ }
+
+
+ /* FILE END */
+
+ if(
+  data.type==="file-end"
+ ){
+
+  if(!incoming)
+   return;
+
+
+  const file=
+   incoming;
+
+
+  const blob=
+   new Blob(
+    file.chunks,
+    {
+     type:file.mime
+    }
+   );
+
+
+  const url=
+   URL.createObjectURL(
+    blob
+   );
+
+
+  finishFile(
+   file.ui,
+   url
+  );
+
+
+  incoming=null;
+
+  transferStatus.textContent=
+   "READY";
+ }
+}
+
+
+/* =====================================================
+   TRANSFER UI
+===================================================== */
+
+function createTransfer(
+ file,
+ mine
+){
+
+ removeEmpty();
+
+
+ const row=
+  document.createElement(
+   "div"
+  );
+
+ row.className=
+  "row "+
+  (mine?"me":"");
+
+
+ const box=
+  document.createElement(
+   "div"
+  );
+
+ box.className=
+  "transfer";
+
+
+ const head=
+  document.createElement(
+   "div"
+  );
+
+ head.className=
+  "transferHead";
+
+
+ const name=
+  document.createElement(
+   "div"
+  );
+
+ name.className=
+  "fileName";
+
+ name.textContent=
+  (mine?"↑ ":"↓ ")+
+  file.name;
+
+
+ const percent=
+  document.createElement(
+   "div"
+  );
+
+ percent.className=
+  "percent";
+
+ percent.textContent=
+  "0%";
+
+
+ head.appendChild(name);
+ head.appendChild(percent);
+
+
+ const progress=
+  document.createElement(
+   "div"
+  );
+
+ progress.className=
+  "progress";
+
+
+ const bar=
+  document.createElement(
+   "div"
+  );
+
+ bar.className=
+  "bar";
+
+ progress.appendChild(
+  bar
+ );
+
+
+ const foot=
+  document.createElement(
+   "div"
+  );
+
+ foot.className=
+  "transferFoot";
+
+
+ const current=
+  document.createElement(
+   "span"
+  );
+
+ current.textContent=
+  "0 B";
+
+
+ const total=
+  document.createElement(
+   "span"
+  );
+
+ total.textContent=
+  formatBytes(
+   file.size
+  );
+
+
+ foot.appendChild(current);
+ foot.appendChild(total);
+
+
+ box.appendChild(head);
+ box.appendChild(progress);
+ box.appendChild(foot);
+
+ row.appendChild(box);
+
+ messages.appendChild(row);
+
+ scroll();
+
+
+ return{
+
+  row,
+
+  bar,
+
+  percent,
+
+  currentEl:current,
+
+  name:file.name,
+
+  size:
+   Number(file.size)||0,
+
+  current:0,
+
+  mine,
+
+  mime:
+   file.mime||
+   file.type||
+   ""
+
+ };
+}
+
+
+/* =====================================================
+   UPDATE PROGRESS
+===================================================== */
+
+function updateTransfer(ui){
+
+ const total=
+  ui.size||0;
+
+ const current=
+  Math.min(
+   ui.current||0,
+   total
+  );
+
+
+ const percent=
+  total
+  ? current/total*100
+  : 100;
+
+
+ ui.bar.style.width=
+  percent.toFixed(2)+"%";
+
+
+ ui.percent.textContent=
+  Math.floor(percent)+"%";
+
+
+ ui.currentEl.textContent=
+  formatBytes(
+   current
+  );
+}
+
+
+/* =====================================================
+   FINISH FILE
+===================================================== */
+
+function finishFile(
+ ui,
+ url
+){
+
+ ui.bar.style.width=
+  "100%";
+
+ ui.percent.textContent=
+  "100%";
+
+ ui.currentEl.textContent=
+  formatBytes(
+   ui.size
+  );
+
+
+ const card=
+  document.createElement(
+   "div"
+  );
+
+ card.className=
+  "file";
+
+
+ if(
+  ui.mime &&
+  ui.mime.startsWith(
+   "image/"
+  )
+ ){
+
+  const img=
+   document.createElement(
+    "img"
+   );
+
+  img.className=
+   "preview";
+
+  img.src=url;
+
+  img.alt=
+   ui.name;
+
+  card.appendChild(
+   img
+  );
+ }
+
+
+ const info=
+  document.createElement(
+   "div"
+  );
+
+ info.className=
+  "fileInfo";
+
+
+ const icon=
+  document.createElement(
+   "div"
+  );
+
+ icon.className=
+  "fileIcon";
+
+ icon.textContent=
+  ui.mime &&
+  ui.mime.startsWith(
+   "image/"
+  )
+  ? "▧"
+  : "↧";
+
+
+ const meta=
+  document.createElement(
+   "div"
+  );
+
+ meta.className=
+  "fileMeta";
+
+
+ const title=
+  document.createElement(
+   "div"
+  );
+
+ title.className=
+  "fileTitle";
+
+ title.textContent=
+  ui.name;
+
+
+ const size=
+  document.createElement(
+   "div"
+  );
+
+ size.className=
+  "fileSize";
+
+ size.textContent=
+  formatBytes(
+   ui.size
+  );
+
+
+ meta.appendChild(title);
+ meta.appendChild(size);
+
+
+ const download=
+  document.createElement(
+   "button"
+  );
+
+ download.className=
+  "download";
+
+ download.textContent=
+  "↓";
+
+ download.onclick=()=>{
+
+  const a=
+   document.createElement(
+    "a"
+   );
+
+  a.href=url;
+
+  a.download=
+   ui.name;
+
+  document.body.appendChild(a);
+
+  a.click();
+
+  a.remove();
+ };
+
+
+ info.appendChild(icon);
+ info.appendChild(meta);
+ info.appendChild(download);
+
+ card.appendChild(info);
+
+
+ ui.row.innerHTML="";
+
+ ui.row.appendChild(card);
+
+ scroll();
+}
+
+
+/* =====================================================
+   FORMAT
+===================================================== */
+
+function formatBytes(bytes){
+
+ if(!bytes)
+  return "0 B";
+
+
+ const units=[
+  "B",
+  "KB",
+  "MB",
+  "GB"
+ ];
+
+
+ let i=0;
+
+ let value=bytes;
+
+
+ while(
+  value>=1024 &&
+  i<units.length-1
+ ){
+
+  value/=1024;
+
+  i++;
+ }
+
+
+ const digits=
+  i===0
+  ? 0
+  : value>=10
+  ? 1
+  : 2;
+
+
+ return value.toFixed(digits)
+  +" "
+  +units[i];
+}
+
+
+/* =====================================================
+   COPY CODE
+===================================================== */
+
+async function copyCode(){
+
+ if(!roomCode)
+  return;
+
+
+ try{
+
+  await navigator.clipboard.writeText(
+   roomCode
+  );
+
+
+  const old=
+   transferStatus.textContent;
+
+
+  transferStatus.textContent=
+   "CODE COPIED";
+
+
+  setTimeout(()=>{
+
+   transferStatus.textContent=
+    old||"READY";
+
+  },1200);
+
+
+ }catch(e){
+
+  const area=
+   document.createElement(
+    "textarea"
+   );
+
+  area.value=
+   roomCode;
+
+  document.body.appendChild(
+   area
+  );
+
+  area.select();
+
+  document.execCommand(
+   "copy"
+  );
+
+  area.remove();
+ }
+}
+
+
+/* =====================================================
+   RECONNECT
+===================================================== */
+
+function reconnect(){
+
+ if(!roomCode)
+  return;
+
+
+ if(isHost){
+
+  transferStatus.textContent=
+   "WAITING FOR CONNECTION";
+
+  offline();
+
+  return;
+ }
+
+
+ if(
+  peer &&
+  !peer.destroyed
+ ){
+
+  try{
+
+   connection=
+    peer.connect(
+     PREFIX+roomCode,
+     {
+      reliable:true
+     }
+    );
+
+
+   setupConnection();
+
+
+   transferStatus.textContent=
+    "CONNECTING...";
+
+
+   return;
+
+  }catch(e){}
+ }
+
+
+ createGuest();
+}
+
+
+/* =====================================================
+   CLEANUP
+===================================================== */
+
+function destroyPeer(){
+
+ try{
+
+  if(connection)
+   connection.close();
+
+ }catch(e){}
+
+
+ try{
+
+  if(peer)
+   peer.destroy();
+
+ }catch(e){}
+
+
+ connection=null;
+ peer=null;
+ ackResolver=null;
+}
+
+
+function goHome(){
+
+ destroyPeer();
+
+ roomCode="";
+ isHost=false;
+
+ fileQueue=[];
+ sending=false;
+ incoming=null;
+
+ messages.innerHTML=`
+  <div class="empty" id="empty">
+   <div class="emptyIcon">✦</div>
+   <p>Your private conversation starts here.</p>
+  </div>
+ `;
+
+ roomInput.value="";
+
+ transferStatus.textContent=
+  "READY";
+
+ offline();
+
+ page("home");
+}
+
+
+/* =====================================================
+   HELPERS
+===================================================== */
+
+function removeEmpty(){
+
+ const e=
+  document.getElementById(
+   "empty"
+  );
+
+ if(e)
+  e.remove();
+}
+
+
+function scroll(){
+
+ requestAnimationFrame(()=>{
+
+  messages.scrollTop=
+   messages.scrollHeight;
+
+ });
+}
+
+
+/* =====================================================
+   CLOSE
+===================================================== */
+
+window.addEventListener(
+ "beforeunload",
+ ()=>{
+
+  try{
+
+   if(connection)
+    connection.close();
+
+   if(peer)
+    peer.destroy();
+
+  }catch(e){}
+
+ }
+);
+
+
+/* =====================================================
+   INIT
+===================================================== */
+
+offline();
+
+</script>
+
+</body>
+</html>
